@@ -96,4 +96,61 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
+    // ── Nuevos métodos con validación de ownership ──────────────────────────
+
+    /**
+     * Retorna la tarea solo si existe Y pertenece a userId.
+     * Si no pertenece (o no existe) retorna Optional.empty() → controller responde 404.
+     */
+    public Optional<Task> getTaskByIdForUser(Long userId, Long taskId) {
+        return getTaskById(taskId)
+                .filter(task -> userId.equals(task.getUserId()));
+    }
+
+    /**
+     * Actualiza los campos de la tarea solo si pertenece a userId.
+     * Retorna Optional.empty() si la tarea no existe o no pertenece al usuario → controller responde 403.
+     */
+    public Optional<Task> updateTaskFieldsForUser(Long userId, Long taskId, Task updatedTask) {
+        Optional<Task> maybeTask = taskRepository.findById(taskId);
+
+        if (maybeTask.isEmpty() || !userId.equals(maybeTask.get().getUserId())) {
+            return Optional.empty();
+        }
+
+        Task existingTask = maybeTask.get();
+        if (updatedTask.getDescription() != null && !updatedTask.getDescription().trim().isEmpty()) {
+            existingTask.setDescription(updatedTask.getDescription().trim());
+        }
+        if (updatedTask.getStatus() != null) {
+            existingTask.setStatus(updatedTask.getStatus());
+        }
+        return Optional.of(taskRepository.save(existingTask));
+    }
+
+    /**
+     * Elimina la tarea solo si pertenece a userId.
+     * Retorna true si se eliminó, false si la tarea no existe o no pertenece al usuario → controller responde 403.
+     */
+    public boolean deleteTaskByIdForUser(Long userId, Long taskId) {
+        Optional<Task> maybeTask = taskRepository.findById(taskId);
+
+        if (maybeTask.isEmpty() || !userId.equals(maybeTask.get().getUserId())) {
+            return false;
+        }
+
+        Task task = maybeTask.get();
+        Optional<User> maybeUser = userRepository.findById(task.getUserId());
+        maybeUser.ifPresent(user -> {
+            try {
+                taskArchiver.archiveTask(user, task);
+            } catch (Exception ignored) {
+                log.error("Error archiving task with id {} for user id {}: {}", task.getId(), user.getId(), ignored.getMessage());
+            }
+        });
+
+        taskRepository.deleteById(taskId);
+        return true;
+    }
+
 }

@@ -11,19 +11,19 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 
 @Data
-@Table("tasks")
+@Table("TASKS")
 public class Task {
     @Id
     private Long id;
     @Size(min=3, message = "Descripcion debe tener al menos 3 caracteres")
     private String description;
-    @Column("created_at")
+    @Column("CREATED_AT")
     private LocalDateTime createdAt;
     private LocalDate deadline;
     @NotNull
     private Status status;
 
-    @Column("user_id")
+    @Column("USER_ID")
     private Long userId;
 
     public enum Status {

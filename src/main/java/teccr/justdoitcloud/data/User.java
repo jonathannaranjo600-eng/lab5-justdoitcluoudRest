@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@Table("users")
+@Table("USERS")
 public class User {
     @Id
     private Long id;
-    @Column("user_name")
+    @Column("USER_NAME")
     private String userName;
     private String name;
     private String email;
@@ -23,7 +23,7 @@ public class User {
     @Transient
     @JsonIgnore // No incluir esta propiedad en las respuestas JSON de la API
     private List<Task> tasks;
-    @Column("created_at")
+    @Column("CREATED_AT")
     private LocalDateTime createdAt;
 
     public enum Type {
